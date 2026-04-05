@@ -4,6 +4,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { TenantUser } from '../tenant-users/entities/tenant-user.entity';
 import { SUPABASE_AUTH_CLIENT } from '../common/supabase/supabase-auth.provider';
+import { LoggerService } from '../common/logger';
+
+const mockLogger = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -25,6 +28,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: SUPABASE_AUTH_CLIENT, useValue: supabaseClient },
         { provide: getRepositoryToken(TenantUser), useValue: tenantUserRepository },
+        { provide: LoggerService, useValue: mockLogger },
       ],
     }).compile();
 

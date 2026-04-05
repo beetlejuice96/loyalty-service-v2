@@ -197,6 +197,70 @@ PORT=3000
 FRONTEND_URL=                # para CORS
 ```
 
+## Logger — uso obligatorio
+
+Todo service **debe** inyectar `LoggerService` y loggear los flows para tener visibilidad de qué pasa en cada momento. Sin `console.log` — siempre `LoggerService`.
+
+### Reglas
+
+- **`log()`** → inicio y resultado exitoso de operaciones
+- **`warn()`** → condición inusual pero controlada (not found, acceso denegado, validación fallida)
+- **`error()`** → excepción inesperada, con stack trace si está disponible
+- **`debug()`** → información de bajo nivel útil solo en desarrollo
+
+### Patrón estándar en services
+
+```typescript
+import { LoggerService } from '../common/logger';
+
+const CTX = 'MiService';   // nombre del service como constante
+
+@Injectable()
+export class MiService {
+  constructor(
+    // ... repos ...
+    private readonly logger: LoggerService,
+  ) {}
+
+  async create(tenantId: string, dto: CreateDto) {
+    this.logger.log('Creating resource', CTX, {
+      function: 'create',
+      userId: dto.performedBy,          // si aplica
+      metadata: { tenantId, ...dto },   // nunca incluir passwords/tokens — se redactan solos
+    });
+
+    // ... lógica ...
+
+    this.logger.log('Resource created', CTX, {
+      function: 'create',
+      metadata: { id: result.id },
+    });
+
+    return result;
+  }
+}
+```
+
+### En specs — mockear el logger
+
+```typescript
+import { LoggerService } from '../common/logger';
+
+const mockLogger = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+
+// En el TestingModule:
+{ provide: LoggerService, useValue: mockLogger },
+```
+
+### Campos disponibles en `LogOptions`
+
+| Campo | Cuándo usarlo |
+|-------|--------------|
+| `function` | siempre — nombre del método |
+| `userId` | cuando la acción la realiza un usuario autenticado |
+| `correlationId` | cuando viene en el header `x-correlation-id` |
+| `metadata` | datos relevantes del flujo — passwords/tokens se redactan automáticamente |
+
 ## Patrones clave
 
 ### Multi-tenancy

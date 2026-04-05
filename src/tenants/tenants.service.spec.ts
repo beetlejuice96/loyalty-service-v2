@@ -4,6 +4,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { TenantsService } from './tenants.service';
 import { Tenant } from './entities/tenant.entity';
 import { LoyaltyProgram } from '../loyalty-programs/entities/loyalty-program.entity';
+import { LoggerService } from '../common/logger';
+
+const mockLogger = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
 describe('TenantsService', () => {
   let service: TenantsService;
@@ -30,6 +33,7 @@ describe('TenantsService', () => {
           provide: getRepositoryToken(LoyaltyProgram),
           useValue: loyaltyProgramRepository,
         },
+        { provide: LoggerService, useValue: mockLogger },
       ],
     }).compile();
 
